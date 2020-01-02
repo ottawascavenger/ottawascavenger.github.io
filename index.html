@@ -1,0 +1,343 @@
+<html>
+	<head>
+		<title>S C A V E N G E R H U N T</title>
+		<style>
+			@import url("https://fonts.googleapis.com/css?family=Montserrat:200&display=swap");
+			body
+			{
+				text-align:center;
+				background-color:#000000;
+				width:500px;
+				margin:10px auto 10px auto;
+				font-family:"Montserrat";
+				font-size:20px;
+			}
+			
+			.behind
+			{
+				/*filter:blur(15px)*/
+				opacity:0;
+			}
+			
+			.section
+			{
+				border:1px dashed #333333;
+				padding:10px;
+				margin:10px;
+				color:#666666;
+			}
+			
+			.button
+			{
+				border-radius:10px;
+				width:200px;
+				height:50px;
+				margin:10px 10px 0px 0px;
+				line-height:50px;
+				display:inline-block;
+			}
+			.buttonDisabled
+			{
+				color:#333333;
+				background-color:#151515;
+			}
+			.buttonEnabled
+			{
+				cursor:pointer;
+				color:#cccccc;
+				background-color:#333333;
+			}
+			.buttonEnabled:hover
+			{
+				background-color:#444444;
+			}
+			
+			.tileRight
+			{
+				background-color:#226622;
+			}
+			.tileRight:hover
+			{
+				background-color:#338833;
+			}
+			
+			.tileWrong
+			{
+				background-color:#662222;
+			}
+			.tileWrong:hover
+			{
+				background-color:#883333;
+			}
+			
+			.overlay
+			{
+				position:fixed;
+				width:500px;
+				top:0px;
+				left:auto;
+			}
+			
+			.question
+			{
+				color:#cccccc;
+			}
+			
+			input
+			{
+				background-color:#222222;
+				border:none;
+				border-radius:10px;
+				height:50px;
+				width:100%;
+				padding:10px;
+				font-size:inherit;
+				color:#aaaaaa;
+				font-family:inherit;
+			}
+			
+			@keyframes rainbow
+			{
+				0%
+				{
+					color:#00ff00;
+				}
+				25%
+				{
+					color:#0000ff;
+				}
+				75%
+				{
+					color:#ff0000;
+				}
+				100%
+				{
+					color:#00ff00;
+				}
+			}
+			.rainbow
+			{
+				animation-name:rainbow;
+				animation-duration:7s;
+				animation-timing-function:linear;
+				animation-iteration-count:infinite;
+			}
+		</style>
+		<script>
+			var zoneNames=new Array();
+			var questions=new Array();
+			var answers=new Array();
+			
+			zoneNames.push("RG93bnRvd24=");
+			questions.push(["QXNrIFdpbGxpYW0gZm9yIGEgY2FyZC4gVXNlIGl0LiBXYWxrIGR1ZSBub3J0aCB0byBhIHN0b3JlLiBGaW5kIGEgZ3JhcGhpYyBvZiAxOCBjb25zdW1lciBpdGVtcyBpbiAyIGNvbmNlbnRyaWMgY2lyY2xlcy4gV2hhdCBhcmUgdGhleT8=","UmVtYWluIGluIHRoZSBzYW1lIHN0b3JlLiBMb29rIGFyb3VuZC48YnIvPjxpPkxhc2VySmV0IFBybyBbeF08L2k+PGJyLz5BIGZhbW91cyBzaGlwIHNhaWxlZCBpbiA8aT4oY3VycmVudCB5ZWFyKSAtIFt4XTwvaT4u","QSBicmlkZ2UgdG8gPGk+NjCwTiA4NbBXPC9pPi4gSG93IG1hbnkgcmVkIGJlbmNoIGJpdHM/","QSBuZWFyYnkgYXJlYSBjb250YWlucyBnbG93aW5nLCBoYW5naW5nIG9yYnMuIFdoYXQncyBpbiB0aGUgY2VudGVyIG9mIHRoZSBwYXJrPw==","U29tZSBpbmRvb3IgZGVlciwgbmVhciBza2F0aW5nIGFuZCBsb2NhbCBnb3Zlcm5tZW50LiBIb3cgbWFueT8="]);
+			answers.push(["YWlycG9kcw==","bWF5Zmxvd2Vy","Mg==","Zm91bnRhaW4=","Mw=="]);
+			
+			zoneNames.push("V2VsbGluZ3Rvbg==");
+			questions.push(["VW5kZXIgY29uc3RydWN0aW9uLi4uPGJyLz5SZWxvYWQgaW4gYSBiaXQh"]);
+			answers.push(["c2Vrcml0"]);
+			
+			zoneNames.push("Uml2ZXI=");
+			questions.push(["VW5kZXIgY29uc3RydWN0aW9uLi4uPGJyLz5SZWxvYWQgaW4gYSBiaXQh"]);
+			answers.push(["c2Vrcml0"]);
+			
+			function makeSection(text="")
+			{
+				var section=document.createElement("div");
+				section.className="section";
+				section.innerHTML=text;
+				return section;
+			}
+			function makeButton(text,clickHandler)
+			{
+				var button=document.createElement("div");
+				button.innerHTML=text;
+				
+				button.disable=function()
+				{
+					button.className="button buttonDisabled";
+					button.onclick=null;
+				}
+				button.enable=function()
+				{
+					button.className="button buttonEnabled";
+					button.onclick=clickHandler;
+				}
+				button.enableIfDisabled=function()
+				{
+					if(button.className.indexOf("buttonDisabled")>0)
+					{
+						button.enable();
+					}
+				}
+				
+				button.enable();
+				
+				return button;
+			}
+			function makeTile(zoneIndex,questionIndex)
+			{
+				var clickFunction=function()
+				{
+					tileClick(zoneIndex,questionIndex);
+				}
+				var tile=makeButton("Question "+(questionIndex+1),clickFunction);
+				
+				tile.markRight=function()
+				{
+					tile.enable();
+					tile.classList.add("tileRight");
+					tile.right=true;
+				}
+				tile.markWrong=function()
+				{
+					tile.enable();
+					tile.classList.add("tileWrong");
+					tile.right=false;
+				}
+				
+				if(questionIndex!=0)
+				{
+					tile.disable();
+				}
+				
+				return tile;
+			}
+			function makeInput()
+			{
+				var input=document.createElement("input");
+				return input;
+			}
+			function makeOverlay()
+			{
+				var overlay=document.createElement("div");
+				overlay.className="overlay";
+				
+				overlay.activate=function()
+				{
+					for(var childIndex=0;childIndex<document.body.children.length;childIndex++)
+					{
+						document.body.children[childIndex].classList.add("behind");
+					}
+				}
+				overlay.deactivate=function()
+				{
+					for(var childIndex=0;childIndex<document.body.children.length;childIndex++)
+					{
+						document.body.children[childIndex].classList.remove("behind");
+					}
+				}
+				
+				return overlay;
+			}
+			
+			var tiles=new Array();
+			
+			function checkIfDone()
+			{
+				for(var zoneIndex=0;zoneIndex<tiles.length;zoneIndex++)
+				{
+					for(var questionIndex=0;questionIndex<tiles[zoneIndex].length;questionIndex++)
+					{
+						if(!tiles[zoneIndex][questionIndex].right)
+						{
+							return;
+						}
+					}
+				}
+				
+				var overlay=makeOverlay();
+				
+				var titleSection=makeSection("Good Job!");
+				titleSection.classList.add("rainbow");
+				overlay.appendChild(titleSection);
+				
+				var textSection=makeSection("You finished the whole scavenger hunt! You should probably tell William or something.");
+				overlay.appendChild(textSection);
+				
+				overlay.activate();
+				document.body.appendChild(overlay);
+			}
+			
+			function tileClick(zoneIndex,questionIndex)
+			{
+				var overlay=makeOverlay();
+				overlay.activate();
+				
+				var titleSection=makeSection("Zone "+(zoneIndex+1)+", Question "+(questionIndex+1));
+				overlay.appendChild(titleSection);
+				
+				var questionSection=makeSection(atob(questions[zoneIndex][questionIndex]));
+				questionSection.classList.add("question");
+				overlay.appendChild(questionSection);
+				
+				var answerSection=makeSection();
+				
+				var answerInput=makeInput();
+				answerSection.appendChild(answerInput);
+					
+				var checkFunction=function()
+				{
+					document.body.removeChild(overlay);
+					overlay.deactivate();
+					
+					var tile=tiles[zoneIndex][questionIndex];
+					if(answerInput.value.toLowerCase()==atob(answers[zoneIndex][questionIndex]))
+					{
+						tile.markRight();
+						
+						if(questionIndex+1<tiles[zoneIndex].length)
+						{
+							tiles[zoneIndex][questionIndex+1].enableIfDisabled();
+						}
+						else
+						{
+							checkIfDone();
+						}
+					}
+					else
+					{
+						tile.markWrong();
+					}
+				}
+				answerSection.appendChild(makeButton("Check",checkFunction));
+				
+				var checkEnter=function(event)
+				{
+					if(event.keyCode==13)
+					{
+						checkFunction();
+					}
+				}
+				answerInput.addEventListener("keydown",checkEnter);
+				
+				overlay.appendChild(answerSection);
+				document.body.appendChild(overlay);
+				answerInput.focus();
+			}
+			
+			function start()
+			{
+				var titleSection=makeSection("Ottawa Scavenger Hunt");
+				document.body.appendChild(titleSection);
+				
+				for(var zoneIndex=0;zoneIndex<questions.length;zoneIndex++)
+				{
+					var zoneString="Zone "+(zoneIndex+1)+": "+atob(zoneNames[zoneIndex]);
+					var zoneSection=makeSection(zoneString+"<br/>");
+					document.body.appendChild(zoneSection);
+					
+					var zoneTiles=new Array();
+					for(var questionIndex=0;questionIndex<questions[zoneIndex].length;questionIndex++)
+					{
+						var tile=makeTile(zoneIndex,questionIndex);
+						zoneSection.appendChild(tile);
+						zoneTiles.push(tile);
+					}
+					tiles.push(zoneTiles);
+				}
+			}
+		</script>
+	</head>
+	<body onload="start()">
+	</body>
+</html>
